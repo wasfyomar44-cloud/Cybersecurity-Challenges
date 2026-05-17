@@ -1,0 +1,159 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{caption}
+\usepackage[backend=biber,style=numeric]{biblatex}
+\addbibresource{references.bib}
+
+\onehalfspacing
+\setlength{\headheight}{15pt}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Cybersecurity Challenges in Web Development}
+\rhead{Student ID: INSERT-ID}
+\cfoot{\thepage}
+
+\lstdefinestyle{codeStyle}{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!8},
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{purple}
+}
+\lstset{style=codeStyle}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{3cm}
+    {\Huge\bfseries Cybersecurity Challenges in Web Development\par}
+    \vspace{2cm}
+    {\Large Technical Report\par}
+    \vspace{2cm}
+    \begin{tabular}{ll}
+        Student Name: & Abd Alah Fashesh \\
+        Student ID: & INSERT-ID \\
+        Module Code: & INSERT-MODULE-CODE \\
+        Submission Date: & \today \\
+    \end{tabular}
+    \vfill
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+\label{sec:introduction}
+
+Web application security is the practice of protecting websites, web services, databases, and users from attacks that target the way applications receive, process, store, and display data. A web application is not only a group of pages. It usually connects a browser, server-side code, APIs, authentication services, cookies, third-party libraries, and databases. Because these parts constantly exchange information, one weak point in input handling, access control, or configuration can create a serious risk.
+
+Web security matters because everyday activities such as banking, shopping, studying, healthcare booking, and government services depend on web applications. If an attacker steals credentials, reads personal records, changes orders, or impersonates a user, the damage affects both individuals and organisations. The OWASP Top 10 describes common categories of web risk and shows that many attacks come from repeated development mistakes, including broken access control, injection flaws, and insecure design \cite{owaspTop10}. This report explains two common vulnerabilities, cross-site scripting and SQL injection, then discusses mitigation techniques and a real-world incident. Section~\ref{sec:vulnerabilities} explains the vulnerabilities, while Table~\ref{tab:mitigations} summarises basic defences.
+
+\section{Common Web Vulnerabilities}
+\label{sec:vulnerabilities}
+
+\subsection{Cross-Site Scripting}
+\label{subsec:xss}
+
+Cross-site scripting, or XSS, happens when a web application sends untrusted input back to a browser as active content. In simple terms, the attacker makes another user's browser run malicious JavaScript. This can happen when comments, profile fields, search terms, or error messages are displayed without proper output encoding. XSS is dangerous because the script runs inside the user's trusted session. Depending on the application, an attacker may steal session data, change page content, redirect the user to a fake login page, or perform actions as the victim.
+
+Stored XSS is saved on the server, for example in a database comment field, and is triggered when another user opens the affected page. Reflected XSS is included in a request and immediately reflected in the response, such as a search page that prints the search term without escaping it. DOM-based XSS happens mainly in client-side code when JavaScript reads unsafe data from the URL and writes it into the document. Figure~\ref{fig:xss-flow} shows the basic flow from malicious input to browser execution.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[node distance=2.7cm, every node/.style={draw, rounded corners, align=center, minimum width=3cm, minimum height=1cm}]
+    \node (attacker) {Attacker\\submits script};
+    \node[right of=attacker] (app) {Web app\\stores or reflects input};
+    \node[right of=app] (victim) {Victim browser\\runs script};
+    \draw[->, thick] (attacker) -- (app);
+    \draw[->, thick] (app) -- (victim);
+\end{tikzpicture}
+\caption{Simplified XSS flow from malicious input to browser execution.}
+\label{fig:xss-flow}
+\end{figure}
+
+\subsection{SQL Injection}
+\label{subsec:sqli}
+
+SQL injection occurs when an application builds a database query by directly mixing user input with SQL code. If the input is not handled safely, an attacker can change the meaning of the query. For example, a login form may expect a username and password, but malicious input can add SQL syntax that bypasses the intended check or exposes extra rows. SQL injection can lead to unauthorised reading, editing, or deletion of data.
+
+This vulnerability is serious because databases often hold the most valuable information in an application, including accounts, email addresses, password hashes, payment records, grades, or business data. OWASP recommends parameterised queries as a primary defence because they separate code from data, so user input is treated as a value rather than executable SQL \cite{owaspSQLi}. Listing~\ref{lst:sqli} shows a simplified unsafe query pattern.
+
+\begin{lstlisting}[language=SQL, caption={Unsafe SQL query built from user input.}, label={lst:sqli}]
+SELECT * FROM users
+WHERE username = 'USER_INPUT'
+AND password = 'PASSWORD_INPUT';
+\end{lstlisting}
+
+If raw input is inserted into this template, the attacker may add characters that change the condition. A safer design uses a prepared statement or an object-relational mapper that binds parameters securely.
+
+\section{Mitigation Techniques}
+\label{sec:mitigation}
+
+Good web security depends on layers of defence rather than one single fix. Input validation checks whether data has the expected type, length, and format before the application processes it. For example, a quantity field should accept a reasonable number, not a script tag. However, validation alone is not enough because names, comments, and addresses may legitimately contain special characters. For XSS, output encoding is essential. Data should be encoded according to where it appears, such as HTML body, HTML attribute, JavaScript, or URL context. OWASP's XSS guidance explains that the correct defence depends on the output context \cite{owaspXSS}.
+
+For SQL injection, the strongest everyday mitigation is parameterised queries. With parameters, the database receives the SQL structure separately from the user-supplied values. Developers should also apply least privilege to database accounts, so the web application does not connect with unnecessary administrator rights. Secure error handling is also important. Public error pages should not reveal SQL statements, file paths, stack traces, or database versions because this information helps attackers plan further attacks.
+
+Security headers add another layer. Content Security Policy can reduce the impact of XSS by restricting which scripts the browser is allowed to run. Secure and HttpOnly cookie attributes can make session cookies harder to steal or misuse. Authentication and session management also need careful design, including strong password storage, session timeout, multi-factor authentication for sensitive accounts, and protection against cross-site request forgery where relevant. NIST guidance supports the wider idea of selecting security controls to manage risk across systems \cite{nist80053}.
+
+\begin{table}[h]
+\centering
+\caption{Examples of vulnerabilities and basic mitigations.}
+\label{tab:mitigations}
+\begin{tabular}{p{3.2cm}p{5cm}p{5cm}}
+\toprule
+\textbf{Issue} & \textbf{Main risk} & \textbf{Basic mitigation} \\
+\midrule
+XSS & Malicious script runs in a user's browser & Context-aware output encoding, safe templates, Content Security Policy \\
+SQL injection & Attacker changes database queries & Parameterised queries, least-privilege database accounts, safe error handling \\
+Weak session handling & Attacker impersonates a user & Secure cookies, session expiry, multi-factor authentication \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+As shown in Table~\ref{tab:mitigations}, each control must match the weakness. A general phrase such as ``sanitize input'' is too vague unless the developer knows what data is allowed and where it will be used.
+
+\section{Real-World Scenario: The Equifax Breach}
+\label{sec:incident}
+
+A major real-world example is the Equifax data breach, which became public in 2017. The incident is often discussed in web security because attackers exploited a known vulnerability in Apache Struts, a web application framework used by the company. The Federal Trade Commission's settlement page describes the breach as affecting personal information of many consumers and leading to a major settlement process \cite{equifaxFTC}. The lesson is clear: web application security also includes dependency management and timely patching. A secure login form is not enough if the underlying framework has a known remote code execution flaw.
+
+This case connects to the earlier sections because it shows why security must be part of the development lifecycle, not only a final test before release. Organisations need asset inventories, vulnerability monitoring, and clear responsibility for applying updates. The impact of a web vulnerability can also extend beyond technical downtime. It can cause legal costs, loss of trust, reputational damage, and long-term harm to users whose personal information is exposed.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+Cybersecurity in web development is about building applications that safely handle untrusted input, protect user data, and continue operating reliably. XSS and SQL injection are common examples because both come from failing to separate trusted code from untrusted data. XSS allows attacker-controlled script to run in a victim's browser, while SQL injection allows attacker input to change database commands. The main mitigations include context-aware output encoding, parameterised queries, least privilege, secure headers, careful session handling, and safe error messages. The Equifax breach shows that secure development also includes patching frameworks and managing dependencies. Overall, web security is not a single tool or checklist item. It is a structured way of thinking about risk during design, coding, testing, deployment, and maintenance.
+
+\section*{Glossary}
+\addcontentsline{toc}{section}{Glossary}
+\begin{description}
+    \item[XSS] Cross-site scripting, where attacker-controlled script runs in another user's browser.
+    \item[SQL Injection] An attack where unsafe input changes the meaning of a database query.
+    \item[CSP] Content Security Policy, a browser security control that restricts allowed scripts and resources.
+\end{description}
+
+\newpage
+\printbibliography
+
+\end{document}
