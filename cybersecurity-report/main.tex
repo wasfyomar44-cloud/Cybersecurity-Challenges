@@ -62,7 +62,15 @@
 \tableofcontents
 \newpage
 
+\section{Introduction}
+\label{sec:introduction}
 
+Web application security is the practice of protecting websites, web services, databases, and users from attacks that target the way applications receive, process, store, and display data. A web application is not only a group of pages. It usually connects a browser, server-side code, APIs, authentication services, cookies, third-party libraries, and databases. Because these parts constantly exchange information, one weak point in input handling, access control, or configuration can create a serious risk.
+
+Web security matters because everyday activities such as banking, shopping, studying, healthcare booking, and government services depend on web applications. If an attacker steals credentials, reads personal records, changes orders, or impersonates a user, the damage affects both individuals and organizations. The Top 10 OWASP describes common categories of web risk and shows that many attacks come from repeated development mistakes, including broken access control, injection flaws, and insecure design \cite{owaspTop10}. This report explains two common vulnerabilities, cross-site scripting and SQL injection, then discusses mitigation techniques and a real-world incident. Section~\ref{sec:vulnerabilities} explains the vulnerabilities, while Table~\ref{tab:mitigations} summarizes the basic defenses.
+
+\section{Common Web Vulnerabilities}
+\label{sec:vulnerabilities}
 
 \subsection{Cross-Site Scripting}
 \label{subsec:xss}
@@ -83,18 +91,7 @@ Stored XSS is saved on the server, for example, in a database comment field, and
     }
 ]
 
-\node (attacker) at (0,0) {Attacker\\submits script};
 
-\node (app) at (5,0)
-{Web app\\stores or reflects input};
-
-\node (victim) at (10,0)
-{Victim browser\\runs script};
-
-\draw[->, thick] (attacker) -- (app);
-\draw[->, thick] (app) -- (victim);
-
-\end{tikzpicture}
 
 \caption{Simplified XSS flow from malicious input to browser execution.}
 \label{fig:xss-flow}
